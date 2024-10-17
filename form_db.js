@@ -16,7 +16,7 @@ http.createServer(function (req, res) {
         return res.end();
       });
     }
-    else if(nomearquivo == "./formlario.html"){
+    else if(nomearquivo == "./formaviao.html"){
       fs.readFile(nomearquivo, function(err, data) {
         if(err){
             res.writeHead(404, {'Content-Type': 'text/html'});
@@ -31,8 +31,8 @@ http.createServer(function (req, res) {
       let nome = q.query.nome;
       let tipo = q.query.tipo;
       let marca = q.query.marca;
-      let combustivel = q.query.combustivel;
-      let db = new sqlite3.Database('./veiculos/veiculo.db', (err) => {
+      let ano_modelo = q.query.ano_modelo;
+      let db = new sqlite3.Database('./veiculo.db', (err) => {
         if (err) {
           return console.error(err.message);
         }
@@ -40,7 +40,7 @@ http.createServer(function (req, res) {
       });
     
       // insere um registro no banco de dados
-      db.run(`INSERT INTO AVIAO(nome, tipo, marca, combustivel) VALUES(?,?,?,?)`, [nome,tipo,marca,combustivel], function(err) {
+      db.run(`INSERT INTO aviao (nome, tipo, marca, ano_modelo) VALUES(?,?,?,?)`, [nome,tipo,marca,ano_modelo], function(err) {
         if (err) {
           return console.log(err.message);
         }
@@ -61,17 +61,17 @@ http.createServer(function (req, res) {
     }
     else if(nomearquivo == "./ver_veiculos"){
       res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write("<html><head><meta charset='UTF-8'><title>Veículos</title></head><body>");
+      res.write("<html><head><meta charset='UTF-8'><title>Veículos</title></head></body></html>");
       res.write("<h1>Veículos Cadastrados</h1>");
 
-      let db = new sqlite3.Database('./veiculos/veiculo.db', (err) => {
+      let db = new sqlite3.Database('./veiculo.db', (err) => {
         if (err) {
           return console.error(err.message);
         }
         console.log('Conectou com o banco de dados!');
       });
 
-       db.all(`SELECT * FROM AVIAO`, [], (err, rows) => {
+       db.all(`SELECT * FROM aviao`, [], (err, rows) => {
         if (err) {
           return console.error(err.message);
         }
@@ -81,14 +81,14 @@ http.createServer(function (req, res) {
         res.write("<th>Nome</th>");
         res.write("<th>Tipo</th>");
         res.write("<th>Marca</th>");
-        res.write("<th>Combustível</th>");
+        res.write("<th>Ano/modelo</th>");
         res.write("</tr>");
         rows.forEach((row) => {
           res.write("<tr>");
           res.write("<td>"+row.nome+"</td>");
           res.write("<td>"+row.tipo+"</td>");
           res.write("<td>"+row.marca+"</td>");
-          res.write("<td>"+row.combustivel+"</td>");
+          res.write("<td>"+row.ano_modelo+"</td>");
           res.write("</tr>");
         });
         res.write("</table>");
@@ -104,8 +104,37 @@ http.createServer(function (req, res) {
         console.log('Fechou a conexão com o banco de dados!');
       });
     }
-}).listen(8080, () => {
-    console.log("O servidor foi iniciado na porta 8080");
+    else if (nomearquivo.endsWith('.jpeg')) {
+      retorno_imagem(res,q.pathname)
+    }
+    else if (nomearquivo.endsWith('stilo.css')) {
+      css(res,q.pathname)
+    }
+    function serveFile(res, filePath, contentType) {
+      fs.readFile(filePath, (err, content) => {
+          if (err) {
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Erro ao carregar o arquivo.');
+          } else {
+              res.writeHead(200, { 'Content-Type': contentType });
+              res.end(content, 'utf-8');
+          }
+      });
+    }
+    function retorno_imagem(res,nomearquivo){
+      serveFile(res,`imagem.jpeg${nomearquivo}`,'image/jpeg',function (_err, data){
+        return data
+      });
+    }
+    function css(res,nomearquivo){
+      serveFile(res,`stilo.css${nomearquivo}`,'text/css',function (err, data){
+        if(err){
+          console.log(err)
+        }
+        return data
+      });
+    }
+    
+}).listen(8030, () => {
+    console.log("O servidor foi iniciado na porta 8030");
 });
-
-
